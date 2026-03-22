@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Word Scramble - Topic 29</title>
+    <style>
+        :root { --primary: #7c3aed; --secondary: #a78bfa; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f5f3ff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .game-card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 30px; text-align: center; }
+        .progress-bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        #progress { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+        .scrambled-word { font-size: 32px; font-weight: 800; color: var(--primary); letter-spacing: 5px; margin: 20px 0; text-transform: uppercase; background: #f5f3ff; padding: 15px; border-radius: 10px; border: 2px dashed var(--secondary); }
+        .hint { color: #64748b; font-style: italic; margin-bottom: 10px; font-size: 14px; }
+        .meaning { font-size: 20px; font-weight: 600; color: #1e293b; margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; text-align: center; margin-bottom: 15px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--secondary); }
+        .btn-check { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .message { margin-top: 15px; font-weight: bold; min-height: 48px; line-height: 1.4; }
+        .correct { color: var(--success); }
+        .wrong { color: var(--danger); }
+        .info { color: var(--warning); }
+    </style>
+</head>
+<body>
+
+<div class="game-card" id="game-container">
+    <div class="progress-bar"><div id="progress"></div></div>
+    <div class="hint" id="pos-hint">LOẠI TỪ</div>
+    <div class="meaning" id="vietnamese-meaning">NGHĨA TIẾNG VIỆT</div>
+    <div class="scrambled-word" id="scrambled">WORD</div>
+    
+    <input type="text" id="user-input" placeholder="Nhập đáp án..." autocomplete="off">
+    <button class="btn-check" id="check-btn" onclick="checkAnswer()">KIỂM TRA</button>
+    <div class="message" id="message"></div>
+    
+    <div style="margin-top: 20px; display: flex; justify-content: space-between; color: #94a3b8; font-size: 13px;">
+        <span>Câu: <span id="current-idx">1</span>/12</span>
+        <span>Điểm: <span id="score">0</span></span>
+    </div>
+</div>
+
+<script>
+    const topic29Data = [
+        { w: "Anxious", m: "Lo lắng, hồi hộp", p: "Adjective" },
+        { w: "Ascertain", m: "Xác minh, tìm hiểu chắc chắn", p: "Verb" },
+        { w: "Assume", m: "Giả định, cho là", p: "Verb" },
+        { w: "Decade", m: "Thập kỷ", p: "Noun" },
+        { w: "Examine", m: "Xem xét, khám xét", p: "Verb" },
+        { w: "Experiment", m: "Cuộc thí nghiệm / Thử nghiệm", p: "Noun/Verb" },
+        { w: "Logical", m: "Hợp lý, theo lô-gic", p: "Adjective" },
+        { w: "Research", m: "Sự nghiên cứu", p: "Noun/Verb" },
+        { w: "Responsibility", m: "Trách nhiệm", p: "Noun" },
+        { w: "Solve", m: "Giải quyết", p: "Verb" },
+        { w: "Supervisor", m: "Người giám sát", p: "Noun" },
+        { w: "Systematic", m: "Có hệ thống, bài bản", p: "Adjective" }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let wrongCount = 0;
+    let isWaiting = false;
+
+    function scramble(word) {
+        let arr = word.toUpperCase().split("");
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return (arr.join("") === word.toUpperCase()) ? scramble(word) : arr.join("");
+    }
+
+    function render() {
+        if (currentIdx >= topic29Data.length) {
+            document.getElementById('game-container').innerHTML = `
+                <h2 style="color: var(--primary)">Hoàn thành!</h2>
+                <p>Số câu đúng của bạn: <strong style="font-size: 24px">${score}/12</strong></p>
+                <button onclick="location.reload()" class="btn-check">Chơi lại</button>`;
+            return;
+        }
+
+        const data = topic29Data[currentIdx];
+        document.getElementById('pos-hint').innerText = `Loại từ: ${data.p}`;
+        document.getElementById('vietnamese-meaning').innerText = data.m;
+        document.getElementById('scrambled').innerText = scramble(data.w.replace(/\s/g, ""));
+        document.getElementById('user-input').value = "";
+        document.getElementById('user-input').disabled = false;
+        document.getElementById('check-btn').disabled = false;
+        document.getElementById('message').innerText = "";
+        document.getElementById('current-idx').innerText = currentIdx + 1;
+        document.getElementById('score').innerText = score;
+        document.getElementById('progress').style.width = `${(currentIdx / 12) * 100}%`;
+        wrongCount = 0;
+        isWaiting = false;
+    }
+
+    function checkAnswer() {
+        if (isWaiting) return;
+        const input = document.getElementById('user-input').value.trim().toLowerCase();
+        const correctWord = topic29Data[currentIdx].w.toLowerCase().replace(/\s/g, "");
+        const msg = document.getElementById('message');
+
+        if (input === correctWord) {
+            msg.innerText = "Chính xác! +1 điểm";
+            msg.className = "message correct";
+            score++;
+            isWaiting = true;
+            setTimeout(() => { currentIdx++; render(); }, 1000);
+        } else {
+            wrongCount++;
+            if (wrongCount >= 2) {
+                isWaiting = true;
+                document.getElementById('user-input').disabled = true;
+                document.getElementById('check-btn').disabled = true;
+                msg.innerHTML = `Sai rồi! Đáp án đúng là: <br><span style="color:var(--primary); font-size: 20px">${topic29Data[currentIdx].w.toUpperCase()}</span>`;
+                msg.className = "message wrong";
+                setTimeout(() => { currentIdx++; render(); }, 2500);
+            } else {
+                msg.innerText = "Chưa đúng! Bạn còn 1 lần thử lại.";
+                msg.className = "message info";
+            }
+        }
+    }
+
+    document.getElementById('user-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
+
+    render();
+</script>
+</body>
+</html>
